@@ -3,6 +3,8 @@ package com.study.event.api.config;
 import com.study.event.api.auth.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,6 +19,8 @@ import org.springframework.web.filter.CorsFilter;
 // 권한처리
 // OAuth2 - SNS로그인
 @EnableWebSecurity
+// 컨트롤러에서 사전, 사후에 권한정보를 캐치해서 막을건지
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -44,9 +48,13 @@ public class SecurityConfig {
                 .and()
                 .authorizeRequests() // 요청 별로 인가 설정
 
+                // /events/*  -> 뒤에 딱 하나만
+                // /events/**  -> 뒤에 여러개
+                .antMatchers(HttpMethod.DELETE, "/events/*").hasAuthority("ADMIN")
+
+                .antMatchers(HttpMethod.PUT, "/auth/promote").hasAuthority("COMMON")
                 // 아래의 URL요청은 로그인 없이 모두 허용
                 .antMatchers("/", "/auth/**").permitAll()
-//                .antMatchers(HttpMethod.POST,"/events/**").hasAnyRole("VIP", "ADMIN")
 
                 // 나머지 요청은 전부 인증(로그인) 후 진행해라
                 .anyRequest().authenticated() // 인가 설정 on
